@@ -28,31 +28,39 @@ namespace Cadastro_Empregados.Repositorio
                 {
                     cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregado.Nome;
                     cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregado.Email;
-                    cmd.Parameters.Add("@Telefone", SqlDbType.DateTime, 30).Value = empregado.Telefone;
+                    cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregado.Telefone;
 
                     cmd.ExecuteNonQuery();
                 }
             }
         }
-        public void VerEmpregados(int Id) //READ
+        public Empregados VerEmpregados(int id)
         {
             using (var connection = SqlConnec.GetConnection())
             {
-                string query = "SELECT Id, Nome, Email, Telefone FROM Empregados";
+                string query = "SELECT Id, Nome, Email, Telefone FROM Empregados WHERE Id = @Id";
+
                 using (var cmd = new SqlCommand(query, connection))
                 {
+                    cmd.Parameters.AddWithValue("@Id", id);
+
                     using (var reader = cmd.ExecuteReader())
                     {
-                        while (reader.Read())
+                        if (reader.Read())
                         {
-                            Console.WriteLine($"ID: {reader["Id"]}, " +
-                                $"Nome: {reader["Nome"]}, " +
-                                $"Email: {reader["Email"]}, " +
-                                $"Telefone: {reader["Telefone"]}");
+                            return new Empregados
+                            {
+                                Id = (int)reader["Id"],
+                                Nome = reader["Nome"].ToString(),
+                                Email = reader["Email"].ToString(),
+                                Telefone = reader["Telefone"].ToString()
+                            };
                         }
                     }
                 }
             }
+
+            return null; // não encontrou
         }
         public void AtualizarEmpregados(Empregados empregados) //ATUALIZAR
         {
@@ -62,6 +70,7 @@ namespace Cadastro_Empregados.Repositorio
 
                 SqlCommand cmd = new SqlCommand(query, connection);
 
+                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = empregados.Id;
                 cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregados.Nome;
                 cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregados.Email;
                 cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregados.Telefone;

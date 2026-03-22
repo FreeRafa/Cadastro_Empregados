@@ -31,17 +31,34 @@ namespace Cadastro_Empregados.Servico
 
         }
 
-        public void VerEmpregados(int Id) 
+        public Empregados VerEmpregados(int id)
         {
-            if(Id <= 0)
-                throw new Exception("Id innexistente");
+            if (id <= 0)
+                throw new ArgumentException("Id invalido");
 
-            _repositorioEmpregados.VerEmpregados(Id);
+            return _repositorioEmpregados.VerEmpregados(id);
         }
 
-        public void AtualizarEmpregados() 
+        public void AtualizarEmpregados(Empregados empregados) 
         {
+            if (empregados.Id <= 0)
+                throw new ArgumentException("Id invalido");
 
+            if (string.IsNullOrWhiteSpace(empregados.Nome))
+                throw new Exception("Employee name must be required.");
+
+            if (string.IsNullOrWhiteSpace(empregados.Email))
+                throw new Exception("O email e obrigatorio");
+
+            _repositorioEmpregados.AtualizarEmpregados(empregados);
+        }
+
+        public void DeletarEmpregados(int Id) 
+        {
+            if (Id <= 0)
+                throw new ArgumentException("Id invalido");
+
+            _repositorioEmpregados.DeletarEmpregados(Id);
         }
     }
 }
