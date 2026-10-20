@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Apresentacao\Menu.cs" />
     <Compile Include="DataConnec\SqlConnec.cs" />
     <Compile Include="Modelo\Empregados.cs" />
     <Compile Include="Program.cs" />

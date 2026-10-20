@@ -10,15 +10,15 @@ namespace Cadastro_Empregados.DataConnec
     public class SqlConnec
     {
         private static readonly string connectionString =
-          "Server=DESKTOP-42RL6N1;Database=Cadastro_Empregados;User Id=sa;Password=135113rr;"; 
+            "Server=(localdb)\\MSSQLLocalDB;Database=Cadastro_Empregados;Trusted_Connection=True;TrustServerCertificate=True;";
 
-        
-        public static SqlConnection GetConnection() 
-        {
+
+        public static SqlConnection GetConnection()
+        {
             SqlConnection connection = new SqlConnection(connectionString);
-            connection.Open(); 
-            return connection; 
-        }
+            connection.Open();
+            return connection;
+        }
 
     }
 }

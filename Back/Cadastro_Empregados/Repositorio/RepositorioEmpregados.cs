@@ -12,84 +12,85 @@ namespace Cadastro_Empregados.Repositorio
 {
     public class RepositorioEmpregados
     {
-        private readonly string _ConnectionString;
+        private readonly string _connectionString;
 
         public RepositorioEmpregados(string connectionString)
         {
-            _ConnectionString = connectionString;
+            _connectionString = connectionString;
+        }
+
+        private SqlConnection CriarConexao()
+        {
+            var connection = new SqlConnection(_connectionString);
+            connection.Open();
+            return connection;
         }
 
         public void AdicionarEmpregado(Empregados empregado) //CREATE
         {
-            using (var connection = SqlConnec.GetConnection())
-            {
-                string query = "INSERT INTO Empregados (Nome, Email, Telefone) VALUES (@Nome, @Email, @Telefone)";
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregado.Nome;
-                    cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregado.Email;
-                    cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregado.Telefone;
+            const string query =
+                "INSERT INTO Empregados (Nome, Email, Telefone) VALUES (@Nome, @Email, @Telefone)";
 
-                    cmd.ExecuteNonQuery();
-                }
+            using (var connection = CriarConexao())
+            using (var cmd = new SqlCommand(query, connection))
+            {
+                cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregado.Nome;
+                cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregado.Email;
+                cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregado.Telefone;
+                cmd.ExecuteNonQuery();
             }
         }
         public Empregados VerEmpregados(int id)
         {
-            using (var connection = SqlConnec.GetConnection())
+            const string query =
+                "SELECT Id, Nome, Email, Telefone FROM Empregados WHERE Id = @Id";
+
+            using (var connection = CriarConexao())
+            using (var cmd = new SqlCommand(query, connection))
             {
-                string query = "SELECT Id, Nome, Email, Telefone FROM Empregados WHERE Id = @Id";
+                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
 
-                using (var cmd = new SqlCommand(query, connection))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    cmd.Parameters.AddWithValue("@Id", id);
-
-                    using (var reader = cmd.ExecuteReader())
+                    if (reader.Read())
                     {
-                        if (reader.Read())
+                        return new Empregados
                         {
-                            return new Empregados
-                            {
-                                Id = (int)reader["Id"],
-                                Nome = reader["Nome"].ToString(),
-                                Email = reader["Email"].ToString(),
-                                Telefone = reader["Telefone"].ToString()
-                            };
-                        }
+                            Id = (int)reader["Id"],
+                            Nome = reader["Nome"].ToString(),
+                            Email = reader["Email"].ToString(),
+                            Telefone = reader["Telefone"].ToString()
+                        };
                     }
                 }
             }
-
-            return null; // não encontrou
+            return null;
         }
-        public void AtualizarEmpregados(Empregados empregados) //ATUALIZAR
+
+        public void AtualizarEmpregados(Empregados empregados)
         {
-            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            const string query =
+                "UPDATE Empregados SET Nome = @Nome, Email = @Email, Telefone = @Telefone WHERE Id = @Id";
+
+            using (var connection = CriarConexao())
+            using (var cmd = new SqlCommand(query, connection))
             {
-                String query = @"UPDATE Empregados SET Nome = @nome, Email = @Email, Telefone = @Telefone WHERE Id = @Id";
-
-                SqlCommand cmd = new SqlCommand(query, connection);
-
                 cmd.Parameters.Add("@Id", SqlDbType.Int).Value = empregados.Id;
                 cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregados.Nome;
                 cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregados.Email;
                 cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregados.Telefone;
-
-                connection.Open();
                 cmd.ExecuteNonQuery();
             }
         }
-        public void DeletarEmpregados(int Id) //DELETAR
+
+        public void DeletarEmpregados(int id)
         {
-            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            const string query = "DELETE FROM Empregados WHERE Id = @Id";
+
+            using (var connection = CriarConexao())
+            using (var cmd = new SqlCommand(query, connection))
             {
-                string query = "Delete FROM Empregados WHERE Id = @Id";
-
-                SqlCommand cmd = new SqlCommand(query, connection);
-
-                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = Id;
-
-                connection.Open();
+                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
                 cmd.ExecuteNonQuery();
             }
         }
