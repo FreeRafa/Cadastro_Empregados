@@ -28,7 +28,11 @@ namespace Cadastro_Empregados.Servico
                 throw new Exception("Email nao pode ser vazio!");
 
             _repositorioEmpregados.AdicionarEmpregado(empregado);
+        }
 
+        public List<Empregados> ListarEmpregados()
+        {
+            return _repositorioEmpregados.ListarEmpregados();
         }
 
         public Empregados VerEmpregados(int id)
@@ -39,7 +43,7 @@ namespace Cadastro_Empregados.Servico
             return _repositorioEmpregados.VerEmpregados(id);
         }
 
-        public void AtualizarEmpregados(Empregados empregados) 
+        public void AtualizarEmpregados(Empregados empregados)
         {
             if (empregados.Id <= 0)
                 throw new ArgumentException("Id invalido");
@@ -53,7 +57,7 @@ namespace Cadastro_Empregados.Servico
             _repositorioEmpregados.AtualizarEmpregados(empregados);
         }
 
-        public void DeletarEmpregados(int Id) 
+        public void DeletarEmpregados(int Id)
         {
             if (Id <= 0)
                 throw new ArgumentException("Id invalido");

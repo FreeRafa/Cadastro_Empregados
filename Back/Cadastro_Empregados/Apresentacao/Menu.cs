@@ -70,6 +70,11 @@ namespace Cadastro_Empregados.Apresentacao
 
         private void Consultar()
         {
+            // 1. Primeiro mostra quem existe
+            if (!MostrarLista())
+                return;
+
+            // 2. Depois pede o ID
             int id = LerInteiro("Digite o ID do empregado: ");
             var empregado = _servico.VerEmpregados(id);
 
@@ -84,6 +89,26 @@ namespace Cadastro_Empregados.Apresentacao
             Console.WriteLine($"Nome: {empregado.Nome}");
             Console.WriteLine($"Email: {empregado.Email}");
             Console.WriteLine($"Telefone: {empregado.Telefone}");
+        }
+
+        // Devolve false se não houver ninguém cadastrado
+        private bool MostrarLista()
+        {
+            var lista = _servico.ListarEmpregados();
+
+            if (lista.Count == 0)
+            {
+                Console.WriteLine("Não existem empregados cadastrados.");
+                return false;
+            }
+
+            Console.WriteLine("=== Empregados cadastrados ===");
+            foreach (var e in lista)
+            {
+                Console.WriteLine($"ID: {e.Id} | Nome: {e.Nome}");
+            }
+
+            return true;
         }
 
         private void Atualizar()

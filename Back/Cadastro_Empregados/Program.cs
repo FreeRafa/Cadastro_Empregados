@@ -8,8 +8,7 @@ namespace Cadastro_Empregados
     {
         static void Main(string[] args)
         {
-            const string connectionString =
-                "Server=(localdb)\\MSSQLLocalDB;Database=Cadastro_Empregados;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=Cadastro_Empregados;Trusted_Connection=True;TrustServerCertificate=True;";
 
             var repositorio = new RepositorioEmpregados(connectionString);
             var servico = new ServicoEmpregados(repositorio);
