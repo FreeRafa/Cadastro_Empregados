@@ -10,9 +10,16 @@ namespace Cadastro_Empregados
         {
             string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=Cadastro_Empregados;Trusted_Connection=True;TrustServerCertificate=True;";
 
-            var repositorio = new RepositorioEmpregados(connectionString);
-            var servico = new ServicoEmpregados(repositorio);
-            var menu = new Menu(servico);
+            // Empregados
+            var repositorioEmpregados = new RepositorioEmpregados(connectionString);
+            var servicoEmpregados = new ServicoEmpregados(repositorioEmpregados);
+
+            // Setores
+            var repositorioSetores = new RepositorioSetores(connectionString);
+            var servicoSetores = new ServicoSetores(repositorioSetores);
+
+            // Menu recebe os dois serviços
+            var menu = new Menu(servicoEmpregados, servicoSetores);
 
             menu.Executar();
         }
