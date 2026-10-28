@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace Cadastro_Empregados.Modelo
 {
-    public class Empregados
+    public class Setor
     {
         public int Id { get; set; }
         public string Nome { get; set; }
-        public string Email { get; set; }
-        public string Telefone { get; set; }
     }
 }

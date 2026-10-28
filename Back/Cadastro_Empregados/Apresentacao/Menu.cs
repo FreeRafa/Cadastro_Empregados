@@ -1,11 +1,10 @@
-﻿using System;
-using System.Data.SqlClient;
-using Cadastro_Empregados.Modelo;
+﻿using Cadastro_Empregados.Modelo;
 using Cadastro_Empregados.Servico;
+using System;
 
 namespace Cadastro_Empregados.Apresentacao
 {
-    public class Menu
+    internal class Menu
     {
         private readonly ServicoEmpregados _servicoEmpregados;
         private readonly ServicoSetores _servicoSetores;
@@ -16,111 +15,92 @@ namespace Cadastro_Empregados.Apresentacao
             _servicoSetores = servicoSetores;
         }
 
-        // ===== MENU PRINCIPAL =====
         public void Executar()
         {
             int opcao = -1;
 
             while (opcao != 0)
             {
-                Console.WriteLine();
-                Console.WriteLine("=== Menu Principal ===");
-                Console.WriteLine("1 .Empregados");
-                Console.WriteLine("2 .Setores");
-                Console.WriteLine("0 .Sair");
+                MostrarOpcoes();
                 opcao = LerInteiro("Escolha uma opção: ");
 
-                switch (opcao)
+                try
                 {
-                    case 1: MenuEmpregados(); break;
-                    case 2: MenuSetores(); break;
-                    case 0: Console.WriteLine("A sair..."); break;
-                    default: Console.WriteLine("Opção inválida!"); break;
+                    switch (opcao)
+                    {
+                        case 1: Cadastrar(); break;
+                        case 2: ListarEmpregados(); break;
+                        case 3: ConsultarPorId(); break;
+                        case 4: Atualizar(); break;
+                        case 5: Deletar(); break;
+                        case 6: ListarSetores(); break;
+                        case 0: Console.WriteLine("A sair..."); break;
+                        default: Console.WriteLine("Opção inválida!"); break;
+                    }
                 }
+                catch (ArgumentException ex)   // erros de validação do serviço
+                {
+                    Console.WriteLine($"Erro: {ex.Message}");
+                }
+                catch (Exception ex)           // qualquer outro erro (ex.: base de dados)
+                {
+                    Console.WriteLine($"Erro inesperado: {ex.Message}");
+                }
+
+                Console.WriteLine();
             }
         }
 
-        // ===== SUBMENU EMPREGADOS =====
-        private void MenuEmpregados()
+        private void MostrarOpcoes()
         {
-            int opcao = -1;
-
-            while (opcao != 0)
-            {
-                Console.WriteLine();
-                Console.WriteLine("=== Empregados ===");
-                Console.WriteLine("1 .Cadastrar empregado novo");
-                Console.WriteLine("2 .Consultar cadastro");
-                Console.WriteLine("3 .Atualizar cadastro");
-                Console.WriteLine("4 .Deletar cadastro");
-                Console.WriteLine("0 .Voltar");
-                opcao = LerInteiro("Escolha uma opção: ");
-
-                switch (opcao)
-                {
-                    case 1: ExecutarSeguro(CadastrarEmpregado); break;
-                    case 2: ExecutarSeguro(ConsultarEmpregado); break;
-                    case 3: ExecutarSeguro(AtualizarEmpregado); break;
-                    case 4: ExecutarSeguro(DeletarEmpregado); break;
-                    case 0: break;
-                    default: Console.WriteLine("Opção inválida!"); break;
-                }
-            }
+            Console.WriteLine("=== Menu do Empregado ===");
+            Console.WriteLine("1. Cadastrar empregado novo");
+            Console.WriteLine("2. Listar empregados");
+            Console.WriteLine("3. Consultar empregado por ID");
+            Console.WriteLine("4. Atualizar cadastro");
+            Console.WriteLine("5. Deletar cadastro");
+            Console.WriteLine("6. Listar setores");
+            Console.WriteLine("0. Sair");
         }
 
-        // ===== SUBMENU SETORES =====
-        private void MenuSetores()
+        private void Cadastrar()
         {
-            int opcao = -1;
+            var empregado = new Empregado();
 
-            while (opcao != 0)
-            {
-                Console.WriteLine();
-                Console.WriteLine("=== Setores ===");
-                Console.WriteLine("1 .Cadastrar setor novo");
-                Console.WriteLine("2 .Listar setores");
-                Console.WriteLine("3 .Atualizar setor");
-                Console.WriteLine("4 .Deletar setor");
-                Console.WriteLine("0 .Voltar");
-                opcao = LerInteiro("Escolha uma opção: ");
-
-                switch (opcao)
-                {
-                    case 1: ExecutarSeguro(CadastrarSetor); break;
-                    case 2: ExecutarSeguro(() => MostrarSetores()); break;
-                    case 3: ExecutarSeguro(AtualizarSetor); break;
-                    case 4: ExecutarSeguro(DeletarSetor); break;
-                    case 0: break;
-                    default: Console.WriteLine("Opção inválida!"); break;
-                }
-            }
-        }
-
-        // ===== EMPREGADOS =====
-        private void CadastrarEmpregado()
-        {
-            var empregado = new Empregados();
-
-            Console.WriteLine("Digite o nome:");
+            Console.WriteLine("--- Cadastro ---");
+            Console.Write("Nome: ");
             empregado.Nome = Console.ReadLine();
-
-            Console.WriteLine("Digite o email:");
+            Console.Write("Email: ");
             empregado.Email = Console.ReadLine();
-
-            Console.WriteLine("Digite o número de telefone:");
+            Console.Write("Telefone: ");
             empregado.Telefone = Console.ReadLine();
 
-            _servicoEmpregados.AdicionarEmpregado(empregado);
+            ListarSetores();
+            empregado.SetorId = LerInteiro("ID do setor: ");
+
+            _servicoEmpregados.Adicionar(empregado);
             Console.WriteLine("Empregado cadastrado com sucesso!");
         }
 
-        private void ConsultarEmpregado()
+        private void ListarEmpregados()
         {
-            if (!MostrarEmpregados())
-                return;
+            var empregados = _servicoEmpregados.ListarTodos();
 
-            int id = LerInteiro("Digite o ID do empregado: ");
-            var empregado = _servicoEmpregados.VerEmpregados(id);
+            if (empregados.Count == 0)
+            {
+                Console.WriteLine("Nenhum empregado cadastrado.");
+                return;
+            }
+
+            Console.WriteLine("=== Empregados ===");
+            foreach (var e in empregados)
+                MostrarEmpregado(e);
+        }
+
+        private void ConsultarPorId()
+        {
+            int id = LerInteiro("ID do empregado: ");
+            var empregado = _servicoEmpregados.ObterPorId(id);
 
             if (empregado == null)
             {
@@ -128,141 +108,57 @@ namespace Cadastro_Empregados.Apresentacao
                 return;
             }
 
-            Console.WriteLine("=== Empregado ===");
-            Console.WriteLine($"ID: {empregado.Id}");
-            Console.WriteLine($"Nome: {empregado.Nome}");
-            Console.WriteLine($"Email: {empregado.Email}");
-            Console.WriteLine($"Telefone: {empregado.Telefone}");
+            MostrarEmpregado(empregado);
         }
 
-        private bool MostrarEmpregados()
+        private void Atualizar()
         {
-            var lista = _servicoEmpregados.ListarEmpregados();
+            var empregado = new Empregado();
 
-            if (lista.Count == 0)
-            {
-                Console.WriteLine("Não existem empregados cadastrados.");
-                return false;
-            }
-
-            Console.WriteLine("=== Empregados cadastrados ===");
-            foreach (var e in lista)
-                Console.WriteLine($"ID: {e.Id} | Nome: {e.Nome}");
-
-            return true;
-        }
-
-        private void AtualizarEmpregado()
-        {
-            var empregado = new Empregados();
-            empregado.Id = LerInteiro("Digite o ID do empregado: ");
-
-            Console.WriteLine("Novo nome:");
+            empregado.Id = LerInteiro("ID do empregado a atualizar: ");
+            Console.Write("Novo nome: ");
             empregado.Nome = Console.ReadLine();
-
-            Console.WriteLine("Novo email:");
+            Console.Write("Novo email: ");
             empregado.Email = Console.ReadLine();
-
-            Console.WriteLine("Novo telefone:");
+            Console.Write("Novo telefone: ");
             empregado.Telefone = Console.ReadLine();
 
-            _servicoEmpregados.AtualizarEmpregados(empregado);
+            ListarSetores();
+            empregado.SetorId = LerInteiro("Novo ID do setor: ");
+
+            _servicoEmpregados.Atualizar(empregado);
             Console.WriteLine("Empregado atualizado com sucesso!");
         }
 
-        private void DeletarEmpregado()
+        private void Deletar()
         {
-            int id = LerInteiro("Digite o ID do empregado para deletar: ");
+            int id = LerInteiro("ID do empregado a deletar: ");
 
-            _servicoEmpregados.DeletarEmpregados(id);
+            _servicoEmpregados.Deletar(id);
             Console.WriteLine("Empregado deletado com sucesso!");
         }
 
-        // ===== SETORES =====
-        private void CadastrarSetor()
+        private void ListarSetores()
         {
-            var setor = new Setores();
-
-            Console.WriteLine("Digite o nome do setor:");
-            setor.Nome = Console.ReadLine();
-
-            _servicoSetores.AdicionarSetor(setor);
-            Console.WriteLine("Setor cadastrado com sucesso!");
+            Console.WriteLine("--- Setores ---");
+            foreach (var s in _servicoSetores.ListarTodos())
+                Console.WriteLine($"{s.Id} - {s.Nome}");
         }
 
-        private bool MostrarSetores()
+        private void MostrarEmpregado(Empregado e)
         {
-            var lista = _servicoSetores.ListarSetores();
-
-            if (lista.Count == 0)
-            {
-                Console.WriteLine("Não existem setores cadastrados.");
-                return false;
-            }
-
-            Console.WriteLine("=== Setores cadastrados ===");
-            foreach (var s in lista)
-                Console.WriteLine($"ID: {s.SetorId} | Nome: {s.Nome}");
-
-            return true;
+            Console.WriteLine($"ID: {e.Id} | Nome: {e.Nome} | Email: {e.Email} | " +
+                              $"Telefone: {e.Telefone ?? "-"} | Setor: {e.Setor.Nome}");
         }
 
-        private void AtualizarSetor()
-        {
-            if (!MostrarSetores())
-                return;
-
-            var setor = new Setores();
-            setor.SetorId = LerInteiro("Digite o ID do setor: ");
-
-            Console.WriteLine("Novo nome:");
-            setor.Nome = Console.ReadLine();
-
-            _servicoSetores.AtualizarSetor(setor);
-            Console.WriteLine("Setor atualizado com sucesso!");
-        }
-
-        private void DeletarSetor()
-        {
-            if (!MostrarSetores())
-                return;
-
-            int id = LerInteiro("Digite o ID do setor para deletar: ");
-
-            try
-            {
-                _servicoSetores.DeletarSetor(id);
-                Console.WriteLine("Setor deletado com sucesso!");
-            }
-            catch (SqlException ex) when (ex.Number == 547)
-            {
-                // 547 = violação de chave estrangeira
-                Console.WriteLine("Não é possível apagar um setor que ainda tem empregados.");
-            }
-        }
-
-        // ===== AUXILIARES =====
-        private void ExecutarSeguro(Action acao)
-        {
-            try
-            {
-                acao();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Erro: " + ex.Message);
-            }
-        }
-
+        // Repete a pergunta até o utilizador digitar um número válido
         private int LerInteiro(string mensagem)
         {
             int valor;
             Console.Write(mensagem);
 
             while (!int.TryParse(Console.ReadLine(), out valor))
-            {
-                Console.Write("Valor inválido. Tente novamente: ");
-            }
+                Console.Write("Valor inválido. " + mensagem);
 
             return valor;
         }

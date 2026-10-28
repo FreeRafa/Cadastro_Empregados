@@ -1,6 +1,8 @@
 ﻿using Cadastro_Empregados.Apresentacao;
+using Cadastro_Empregados.DataConnec;
 using Cadastro_Empregados.Repositorio;
 using Cadastro_Empregados.Servico;
+using System;
 
 namespace Cadastro_Empregados
 {
@@ -8,19 +10,28 @@ namespace Cadastro_Empregados
     {
         static void Main(string[] args)
         {
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=Cadastro_Empregados;Trusted_Connection=True;TrustServerCertificate=True;";
+            // Testa a ligação uma vez, usando a ÚNICA connection string (em SqlConnec)
+            try
+            {
+                using (var conn = SqlConnec.GetConnection())
+                {
+                    Console.WriteLine("Conexão bem-sucedida!");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erro ao ligar à base de dados: " + ex.Message);
+                return;
+            }
 
-            // Empregados
-            var repositorioEmpregados = new RepositorioEmpregados(connectionString);
-            var servicoEmpregados = new ServicoEmpregados(repositorioEmpregados);
+            // Composição das dependências (feita uma só vez, fora do loop)
+            var repositorioSetores = new RepositorioSetores();
+            var repositorioEmpregados = new RepositorioEmpregados();
 
-            // Setores
-            var repositorioSetores = new RepositorioSetores(connectionString);
             var servicoSetores = new ServicoSetores(repositorioSetores);
+            var servicoEmpregados = new ServicoEmpregados(repositorioEmpregados, repositorioSetores);
 
-            // Menu recebe os dois serviços
             var menu = new Menu(servicoEmpregados, servicoSetores);
-
             menu.Executar();
         }
     }

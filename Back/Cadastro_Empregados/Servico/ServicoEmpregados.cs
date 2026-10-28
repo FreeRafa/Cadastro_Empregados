@@ -2,67 +2,68 @@
 using Cadastro_Empregados.Repositorio;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Cadastro_Empregados.Servico
 {
     public class ServicoEmpregados
     {
         private readonly RepositorioEmpregados _repositorioEmpregados;
+        private readonly RepositorioSetores _repositorioSetores;
 
-        //Metodo construtor
-        public ServicoEmpregados(RepositorioEmpregados repositorioEmpregados)
+        public ServicoEmpregados(RepositorioEmpregados repositorioEmpregados,
+                                 RepositorioSetores repositorioSetores)
         {
             _repositorioEmpregados = repositorioEmpregados;
+            _repositorioSetores = repositorioSetores;
         }
 
-        //Regras de negocio
-        public void AdicionarEmpregado(Empregados empregado)
+        public void Adicionar(Empregado empregado)
         {
-            if (string.IsNullOrWhiteSpace(empregado.Nome))
-                throw new Exception("Nome nao pode ser nulo!");
-
-            if (string.IsNullOrWhiteSpace(empregado.Email))
-                throw new Exception("Email nao pode ser vazio!");
-
-            _repositorioEmpregados.AdicionarEmpregado(empregado);
+            Validar(empregado);
+            _repositorioEmpregados.Adicionar(empregado);
         }
 
-        public List<Empregados> ListarEmpregados()
+        public List<Empregado> ListarTodos()
         {
-            return _repositorioEmpregados.ListarEmpregados();
+            return _repositorioEmpregados.ListarTodos();
         }
 
-        public Empregados VerEmpregados(int id)
+        public Empregado ObterPorId(int id)
         {
             if (id <= 0)
-                throw new ArgumentException("Id invalido");
+                throw new ArgumentException("Id inválido.");
 
-            return _repositorioEmpregados.VerEmpregados(id);
+            return _repositorioEmpregados.ObterPorId(id);
         }
 
-        public void AtualizarEmpregados(Empregados empregados)
+        public void Atualizar(Empregado empregado)
         {
-            if (empregados.Id <= 0)
-                throw new ArgumentException("Id invalido");
+            if (empregado.Id <= 0)
+                throw new ArgumentException("Id inválido.");
 
-            if (string.IsNullOrWhiteSpace(empregados.Nome))
-                throw new Exception("Employee name must be required.");
-
-            if (string.IsNullOrWhiteSpace(empregados.Email))
-                throw new Exception("O email e obrigatorio");
-
-            _repositorioEmpregados.AtualizarEmpregados(empregados);
+            Validar(empregado);
+            _repositorioEmpregados.Atualizar(empregado);
         }
 
-        public void DeletarEmpregados(int Id)
+        public void Deletar(int id)
         {
-            if (Id <= 0)
-                throw new ArgumentException("Id invalido");
+            if (id <= 0)
+                throw new ArgumentException("Id inválido.");
 
-            _repositorioEmpregados.DeletarEmpregados(Id);
+            _repositorioEmpregados.Deletar(id);
+        }
+
+        // Regras de negócio comuns ao cadastro e à atualização
+        private void Validar(Empregado empregado)
+        {
+            if (string.IsNullOrWhiteSpace(empregado.Nome))
+                throw new ArgumentException("O nome é obrigatório.");
+
+            if (string.IsNullOrWhiteSpace(empregado.Email))
+                throw new ArgumentException("O email é obrigatório.");
+
+            if (_repositorioSetores.ObterPorId(empregado.SetorId) == null)
+                throw new ArgumentException("O setor escolhido não existe.");
         }
     }
 }

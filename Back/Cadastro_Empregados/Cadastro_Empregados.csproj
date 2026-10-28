@@ -45,8 +45,8 @@
   <ItemGroup>
     <Compile Include="Apresentacao\Menu.cs" />
     <Compile Include="DataConnec\SqlConnec.cs" />
-    <Compile Include="Modelo\Empregados.cs" />
-    <Compile Include="Modelo\Setores.cs" />
+    <Compile Include="Modelo\Empregado.cs" />
+    <Compile Include="Modelo\Setor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositorio\RepositorioEmpregados.cs" />

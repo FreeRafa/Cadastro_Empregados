@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Cadastro_Empregados.DataConnec;
+﻿using Cadastro_Empregados.DataConnec;
 using Cadastro_Empregados.Modelo;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -12,112 +9,120 @@ namespace Cadastro_Empregados.Repositorio
 {
     public class RepositorioEmpregados
     {
-        private readonly string _ConnectionString;
+        // O JOIN traz o nome do setor junto com os dados do empregado
+        private const string SelectBase = @"
+            SELECT e.Id, e.Nome, e.Email, e.Telefone, e.SetorId, s.Nome AS NomeSetor
+            FROM Empregados e
+            INNER JOIN Setores s ON s.Id = e.SetorId";
 
-        public RepositorioEmpregados(string connectionString)
-        {
-            _ConnectionString = connectionString;
-        }
-
-        public void AdicionarEmpregado(Empregados empregado) //CREATE
+        public void Adicionar(Empregado empregado) // CREATE
         {
             using (var connection = SqlConnec.GetConnection())
             {
-                string query = "INSERT INTO Empregados (Nome, Email, Telefone) VALUES (@Nome, @Email, @Telefone)";
+                string query = @"INSERT INTO Empregados (Nome, Email, Telefone, SetorId)
+                                 VALUES (@Nome, @Email, @Telefone, @SetorId)";
+
                 using (var cmd = new SqlCommand(query, connection))
                 {
                     cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregado.Nome;
                     cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregado.Email;
-                    cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregado.Telefone;
+                    cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value =
+                        string.IsNullOrWhiteSpace(empregado.Telefone) ? (object)DBNull.Value : empregado.Telefone;
+                    cmd.Parameters.Add("@SetorId", SqlDbType.Int).Value = empregado.SetorId;
 
                     cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        public List<Empregados> ListarEmpregados() //READ (todos)
+        public List<Empregado> ListarTodos() // READ (lista)
         {
-            const string query = "SELECT Id, Nome, Email, Telefone FROM Empregados ORDER BY Id";
-
-            var lista = new List<Empregados>();
+            var empregados = new List<Empregado>();
 
             using (var connection = SqlConnec.GetConnection())
-            using (var cmd = new SqlCommand(query, connection))
-            using (var reader = cmd.ExecuteReader())
             {
-                while (reader.Read())
+                using (var cmd = new SqlCommand(SelectBase + " ORDER BY e.Id", connection))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    lista.Add(new Empregados
-                    {
-                        Id = (int)reader["Id"],
-                        Nome = reader["Nome"].ToString(),
-                        Email = reader["Email"].ToString(),
-                        Telefone = reader["Telefone"].ToString()
-                    });
+                    while (reader.Read())
+                        empregados.Add(Mapear(reader));
                 }
             }
 
-            return lista;
+            return empregados;
         }
 
-        public Empregados VerEmpregados(int id) //READ (um)
+        public Empregado ObterPorId(int id) // READ (um)
         {
-            const string query = "SELECT Id, Nome, Email, Telefone FROM Empregados WHERE Id = @Id";
-
             using (var connection = SqlConnec.GetConnection())
-            using (var cmd = new SqlCommand(query, connection))
             {
-                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
-
-                using (var reader = cmd.ExecuteReader())
+                using (var cmd = new SqlCommand(SelectBase + " WHERE e.Id = @Id", connection))
                 {
-                    if (reader.Read())
+                    cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
+
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        return new Empregados
-                        {
-                            Id = (int)reader["Id"],
-                            Nome = reader["Nome"].ToString(),
-                            Email = reader["Email"].ToString(),
-                            Telefone = reader["Telefone"].ToString()
-                        };
+                        if (reader.Read())
+                            return Mapear(reader);
                     }
                 }
             }
 
-            return null; // não encontrou
+            return null;
         }
 
-        public void AtualizarEmpregados(Empregados empregados) //ATUALIZAR
+        public void Atualizar(Empregado empregado) // UPDATE
         {
-            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            using (var connection = SqlConnec.GetConnection())
             {
-                String query = @"UPDATE Empregados SET Nome = @nome, Email = @Email, Telefone = @Telefone WHERE Id = @Id";
+                string query = @"UPDATE Empregados
+                                 SET Nome = @Nome, Email = @Email, Telefone = @Telefone, SetorId = @SetorId
+                                 WHERE Id = @Id";
 
-                SqlCommand cmd = new SqlCommand(query, connection);
+                using (var cmd = new SqlCommand(query, connection))
+                {
+                    cmd.Parameters.Add("@Id", SqlDbType.Int).Value = empregado.Id;
+                    cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregado.Nome;
+                    cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregado.Email;
+                    cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value =
+                        string.IsNullOrWhiteSpace(empregado.Telefone) ? (object)DBNull.Value : empregado.Telefone;
+                    cmd.Parameters.Add("@SetorId", SqlDbType.Int).Value = empregado.SetorId;
 
-                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = empregados.Id;
-                cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = empregados.Nome;
-                cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = empregados.Email;
-                cmd.Parameters.Add("@Telefone", SqlDbType.NVarChar, 30).Value = empregados.Telefone;
-
-                connection.Open();
-                cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
+                }
             }
         }
 
-        public void DeletarEmpregados(int Id) //DELETAR
+        public void Deletar(int id) // DELETE
         {
-            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            using (var connection = SqlConnec.GetConnection())
             {
-                string query = "Delete FROM Empregados WHERE Id = @Id";
-
-                SqlCommand cmd = new SqlCommand(query, connection);
-
-                cmd.Parameters.Add("@Id", SqlDbType.Int).Value = Id;
-
-                connection.Open();
-                cmd.ExecuteNonQuery();
+                using (var cmd = new SqlCommand("DELETE FROM Empregados WHERE Id = @Id", connection))
+                {
+                    cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
+                    cmd.ExecuteNonQuery();
+                }
             }
+        }
+
+        // Converte uma linha do reader num objeto Empregado
+        private Empregado Mapear(SqlDataReader reader)
+        {
+            int ordTelefone = reader.GetOrdinal("Telefone");
+
+            return new Empregado
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                Nome = reader.GetString(reader.GetOrdinal("Nome")),
+                Email = reader.GetString(reader.GetOrdinal("Email")),
+                Telefone = reader.IsDBNull(ordTelefone) ? null : reader.GetString(ordTelefone),
+                SetorId = reader.GetInt32(reader.GetOrdinal("SetorId")),
+                Setor = new Setor
+                {
+                    Id = reader.GetInt32(reader.GetOrdinal("SetorId")),
+                    Nome = reader.GetString(reader.GetOrdinal("NomeSetor"))
+                }
+            };
         }
     }
 }

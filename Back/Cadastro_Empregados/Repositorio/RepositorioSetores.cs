@@ -1,117 +1,62 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
+﻿using Cadastro_Empregados.DataConnec;
 using Cadastro_Empregados.Modelo;
+using System.Collections.Generic;
+using System.Data.SqlClient;
 
 namespace Cadastro_Empregados.Repositorio
 {
     public class RepositorioSetores
     {
-        private readonly string _connectionString;
-
-        public RepositorioSetores(string connectionString)
+        public List<Setor> ListarTodos()
         {
-            _connectionString = connectionString;
-        }
+            var setores = new List<Setor>();
 
-        public void AdicionarSetor(Setores setor) // CREATE
-        {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = SqlConnec.GetConnection())
             {
-                string query = "INSERT INTO Setores (Nome) VALUES (@Nome)";
+                string query = "SELECT Id, Nome FROM Setores ORDER BY Id";
+
                 using (var cmd = new SqlCommand(query, connection))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = setor.Nome;
-
-                    connection.Open();
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        public List<Setores> ListarSetores() // READ (todos)
-        {
-            var lista = new List<Setores>();
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                string query = "SELECT SetorId, Nome FROM Setores";
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    connection.Open();
-                    using (var reader = cmd.ExecuteReader())
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        setores.Add(new Setor
                         {
-                            lista.Add(new Setores
-                            {
-                                SetorId = (int)reader["SetorId"],
-                                Nome = reader["Nome"].ToString()
-                            });
-                        }
+                            Id = reader.GetInt32(0),
+                            Nome = reader.GetString(1)
+                        });
                     }
                 }
             }
 
-            return lista;
+            return setores;
         }
 
-        public Setores VerSetor(int setorId) // READ (por id)
+        public Setor ObterPorId(int id)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = SqlConnec.GetConnection())
             {
-                string query = "SELECT SetorId, Nome FROM Setores WHERE SetorId = @SetorId";
+                string query = "SELECT Id, Nome FROM Setores WHERE Id = @Id";
+
                 using (var cmd = new SqlCommand(query, connection))
                 {
-                    cmd.Parameters.Add("@SetorId", SqlDbType.Int).Value = setorId;
+                    cmd.Parameters.Add("@Id", System.Data.SqlDbType.Int).Value = id;
 
-                    connection.Open();
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            return new Setores
+                            return new Setor
                             {
-                                SetorId = (int)reader["SetorId"],
-                                Nome = reader["Nome"].ToString()
+                                Id = reader.GetInt32(0),
+                                Nome = reader.GetString(1)
                             };
                         }
                     }
                 }
             }
 
-            return null; // não encontrou
-        }
-
-        public void AtualizarSetor(Setores setor) // UPDATE
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                string query = "UPDATE Setores SET Nome = @Nome WHERE SetorId = @SetorId";
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    cmd.Parameters.Add("@SetorId", SqlDbType.Int).Value = setor.SetorId;
-                    cmd.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = setor.Nome;
-
-                    connection.Open();
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        public void DeletarSetor(int setorId) // DELETE
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                string query = "DELETE FROM Setores WHERE SetorId = @SetorId";
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    cmd.Parameters.Add("@SetorId", SqlDbType.Int).Value = setorId;
-
-                    connection.Open();
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            return null;
         }
     }
 }

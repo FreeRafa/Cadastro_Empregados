@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Cadastro_Empregados.Modelo;
+﻿using Cadastro_Empregados.Modelo;
 using Cadastro_Empregados.Repositorio;
+using System.Collections.Generic;
 
 namespace Cadastro_Empregados.Servico
 {
@@ -14,44 +13,9 @@ namespace Cadastro_Empregados.Servico
             _repositorioSetores = repositorioSetores;
         }
 
-        public void AdicionarSetor(Setores setor)
+        public List<Setor> ListarTodos()
         {
-            if (string.IsNullOrWhiteSpace(setor.Nome))
-                throw new Exception("O nome do setor é obrigatório!");
-
-            _repositorioSetores.AdicionarSetor(setor);
-        }
-
-        public List<Setores> ListarSetores()
-        {
-            return _repositorioSetores.ListarSetores();
-        }
-
-        public Setores VerSetor(int setorId)
-        {
-            if (setorId <= 0)
-                throw new ArgumentException("Id inválido");
-
-            return _repositorioSetores.VerSetor(setorId);
-        }
-
-        public void AtualizarSetor(Setores setor)
-        {
-            if (setor.SetorId <= 0)
-                throw new ArgumentException("Id inválido");
-
-            if (string.IsNullOrWhiteSpace(setor.Nome))
-                throw new Exception("O nome do setor é obrigatório!");
-
-            _repositorioSetores.AtualizarSetor(setor);
-        }
-
-        public void DeletarSetor(int setorId)
-        {
-            if (setorId <= 0)
-                throw new ArgumentException("Id inválido");
-
-            _repositorioSetores.DeletarSetor(setorId);
+            return _repositorioSetores.ListarTodos();
         }
     }
 }
